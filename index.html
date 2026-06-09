@@ -187,8 +187,16 @@
             letter-spacing: 0.3px;
         }
 
-        .ios-input {
+        /* จัด Layout ให้ Input และปุ่ม Action อยู่แถวเดียวกัน */
+        .input-group-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             width: 100%;
+        }
+
+        .ios-input {
+            flex: 1;
             background: transparent;
             border: none;
             color: var(--text-main);
@@ -204,6 +212,30 @@
         .ios-textarea {
             height: 75px;
             resize: none;
+        }
+
+        /* ปุ่ม Action ภายในช่องอินพุต (Copy / Paste) */
+        .input-action-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: var(--ios-blue);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .input-action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .input-action-btn:active {
+            transform: scale(0.95);
         }
 
         /* iOS Action Button */
@@ -329,7 +361,12 @@
     <div class="ios-list">
         <div class="ios-row">
             <label><i class="fa-solid fa-server"></i> Firebase Database URL</label>
-            <input type="text" id="firebase_url" class="ios-input" value="https://coffee-spark-ai-barista-ece33-default-rtdb.asia-southeast1.firebasedatabase.app" placeholder="https://your-project-id.firebasedatabase.app" onchange="fetchCurrentConfig()">
+            <div class="input-group-wrapper">
+                <input type="text" id="firebase_url" class="ios-input" value="https://coffee-spark-ai-barista-ece33-default-rtdb.asia-southeast1.firebasedatabase.app" placeholder="https://your-project-id.firebasedatabase.app" onchange="fetchCurrentConfig()">
+                <button type="button" class="input-action-btn" onclick="copyToClipboard('firebase_url')">
+                    <i class="fa-solid fa-copy"></i> คัดลอก
+                </button>
+            </div>
         </div>
     </div>
 
@@ -351,7 +388,12 @@
 
         <div class="ios-row">
             <label><i class="fa-solid fa-link"></i> Direct Download URL (GitHub Releases)</label>
-            <input type="text" id="download_url" class="ios-input" placeholder="https://github.com/.../releases/download/...">
+            <div class="input-group-wrapper">
+                <input type="text" id="download_url" class="ios-input" placeholder="https://github.com/.../releases/download/...">
+                <button type="button" class="input-action-btn" onclick="pasteFromClipboard('download_url')">
+                    <i class="fa-solid fa-paste"></i> วาง
+                </button>
+            </div>
         </div>
     </div>
 
@@ -404,6 +446,52 @@ function toggleLoading(show, text = "") {
         overlay.classList.add('active');
     } else {
         overlay.classList.remove('active');
+    }
+}
+
+function showToast(message, type = 'success') {
+    const statusDiv = document.getElementById('status');
+    if (type === 'success') {
+        statusDiv.style.color = "var(--ios-green)";
+        statusDiv.style.background = "rgba(48, 209, 88, 0.1)";
+        statusDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${message}`;
+    } else {
+        statusDiv.style.color = "var(--ios-red)";
+        statusDiv.style.background = "rgba(255, 69, 58, 0.1)";
+        statusDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${message}`;
+    }
+    statusDiv.classList.add('show');
+    setTimeout(() => { statusDiv.classList.remove('show'); }, 3000);
+}
+
+// 📋 ฟังก์ชันคัดลอกข้อความ (Copy)
+async function copyToClipboard(inputId) {
+    const inputElement = document.getElementById(inputId);
+    if (!inputElement.value.trim()) {
+        showToast("ไม่มีข้อความให้คัดลอก", "error");
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(inputElement.value);
+        showToast("คัดลอกลง Clipboard แล้ว!", "success");
+    } catch (err) {
+        showToast("ไม่สามารถคัดลอกได้", "error");
+    }
+}
+
+// 📥 ฟังก์ชันวางข้อความ (Paste)
+async function pasteFromClipboard(inputId) {
+    const inputElement = document.getElementById(inputId);
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+            inputElement.value = text;
+            showToast("วางข้อความสำเร็จ", "success");
+        } else {
+            showToast("ไม่มีข้อความใน Clipboard", "error");
+        }
+    } catch (err) {
+        showToast("โปรดอนุญาตสิทธิ์การเข้าถึง Clipboard ของเบราว์เซอร์", "error");
     }
 }
 
@@ -472,7 +560,6 @@ async function saveConfigToFirebase() {
     const latestVersion = document.getElementById('latest_version').value.trim();
     const message = document.getElementById('message').value;
     const downloadUrl = document.getElementById('download_url').value.trim();
-    const statusDiv = document.getElementById('status');
 
     if (!firebaseUrl || !currentBuildId || !latestVersion) {
         alert("กรุณากรอกข้อมูลสำคัญให้ครบ: URL, รหัสบิลด์ และเลขเวอร์ชัน");
@@ -498,11 +585,7 @@ async function saveConfigToFirebase() {
         });
 
         if (response.ok) {
-            statusDiv.style.color = "var(--ios-green)";
-            statusDiv.style.background = "rgba(48, 209, 88, 0.1)";
-            statusDiv.innerHTML = '<i class="fa-solid fa-circle-check"></i> บันทึกและปล่อยแพตช์อัปเดตสำเร็จ!';
-            statusDiv.classList.add('show');
-            
+            showToast("บันทึกและปล่อยแพตช์อัปเดตสำเร็จ!", "success");
             updateStatusPill('success', 'อัปเดตแล้ว');
 
             // 🕒 แสดงผลและเซฟเฉพาะตัวแปรเวลากล่องเพียว ๆ ไม่มีคำว่า Saved: นำหน้า
@@ -514,14 +597,10 @@ async function saveConfigToFirebase() {
             throw new Error();
         }
     } catch (err) {
-        statusDiv.style.color = "var(--ios-red)";
-        statusDiv.style.background = "rgba(255, 69, 58, 0.1)";
-        statusDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> เกิดข้อผิดพลาด ไม่สามารถส่งข้อมูลได้';
-        statusDiv.classList.add('show');
+        showToast("เกิดข้อผิดพลาด ไม่สามารถส่งข้อมูลได้", "error");
         updateStatusPill('error', 'อัปเดตล้มเหลว');
     } finally {
         toggleLoading(false);
-        setTimeout(() => { statusDiv.classList.remove('show'); }, 4000);
     }
 }
 </script>
