@@ -36,7 +36,7 @@
             align-items: center;
             min-height: 100vh;
             background-image: radial-gradient(circle at 50% 10%, #1c1c1e 0%, #000000 70%);
-            padding: 20px;
+            padding: 40px 20px;
         }
 
         /* ดีไซน์ Liquid Glass Card */
@@ -50,11 +50,32 @@
             max-width: 440px;
             padding: 30px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* ปุ่มย้อนกลับสไตล์ iOS */
+        .back-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            color: var(--ios-blue);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: opacity 0.2s;
+            font-weight: 500;
+        }
+
+        .back-btn:active {
+            opacity: 0.6;
         }
 
         .header {
             text-align: center;
             margin-bottom: 25px;
+            margin-top: 15px;
         }
 
         .header i {
@@ -152,6 +173,37 @@
             display: none;
         }
 
+        /* Progress Bar สไตล์ iOS */
+        .progress-container {
+            display: none;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--ios-blue);
+            border-radius: 3px;
+            transition: width 0.1s ease;
+        }
+
         /* ปุ่มกด Action */
         .ios-btn {
             width: 100%;
@@ -216,6 +268,78 @@
             color: var(--ios-red);
         }
 
+        /* ส่วนของประวัติการอัปโหลด */
+        .history-section {
+            margin-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+        .history-title {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .clear-history-btn {
+            background: none;
+            border: none;
+            color: var(--ios-red);
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .history-list {
+            max-height: 180px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+        /* ปรับแต่ง Scrollbar สไตล์ iOS */
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        .history-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .history-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-width: 80%;
+        }
+        .history-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .history-meta {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+        }
+        .history-link {
+            color: var(--ios-blue);
+            font-size: 1rem;
+            text-decoration: none;
+            padding: 4px;
+        }
+
         .spinner {
             animation: spin 1s linear infinite;
         }
@@ -232,6 +356,10 @@
 <body>
 
     <div class="glass-container">
+        <a href="index.html" class="back-btn">
+            <i class="fa-solid fa-chevron-left"></i> ย้อนกลับ
+        </a>
+
         <div class="header">
             <i class="fa-solid fa-cloud-arrow-up"></i>
             <h1>คลังอัปโหลดไฟล์ระบบ</h1>
@@ -260,6 +388,16 @@
             <input type="file" id="fileInput">
         </div>
 
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-info">
+                <span id="progressFileName" style="max-width: 70%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ไฟล์: -</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
+        </div>
+
         <button id="uploadBtn" class="ios-btn" disabled>
             <i class="fa-solid fa-paper-plane"></i> เริ่มส่งไฟล์ขึ้นคลังระบบ
         </button>
@@ -267,6 +405,15 @@
         <div id="statusBox" class="status-box">
             <i id="statusIcon" class="fa-solid"></i>
             <span id="statusText">กำลังจัดเตรียมข้อความ...</span>
+        </div>
+
+        <div class="history-section">
+            <div class="history-title">
+                <span><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการอัปโหลด</span>
+                <button class="clear-history-btn" id="clearHistoryBtn">ล้างประวัติ</button>
+            </div>
+            <div class="history-list" id="historyList">
+                </div>
         </div>
     </div>
 
@@ -280,13 +427,24 @@
         const statusBox = document.getElementById('statusBox');
         const statusText = document.getElementById('statusText');
         const statusIcon = document.getElementById('statusIcon');
+        
+        // ตัวแปรส่วนที่เพิ่มขึ้นมาใหม่
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressFileName = document.getElementById('progressFileName');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
         let selectedFile = null;
 
-        // บันทึก Token ชั่วคราวลงใน LocalStorage เพื่อไม่ต้องกรอกใหม่ทุกครั้ง (ปลอดภัยในเครื่องคุณเอง)
+        // โหลดข้อมูลเดิมจาก LocalStorage
         if(localStorage.getItem('gh_user')) document.getElementById('username').value = localStorage.getItem('gh_user');
         if(localStorage.getItem('gh_repo')) document.getElementById('repo').value = localStorage.getItem('gh_repo');
         if(localStorage.getItem('gh_token')) document.getElementById('token').value = localStorage.getItem('gh_token');
+
+        // เรียกแสดงประวัติเมื่อเปิดหน้าเว็บ
+        renderHistory();
 
         // เหตุการณ์ตรวจจับการลากวางไฟล์ (Drag & Drop)
         ['dragenter', 'dragover'].forEach(eventName => {
@@ -314,6 +472,11 @@
             fileIcon.style.color = "var(--ios-green)";
             uploadBtn.disabled = false;
             showStatus(null);
+            
+            // ซ่อนแถบ progress เดิมตอนเลือกไฟล์ใหม่
+            progressContainer.style.display = "none";
+            progressBarFill.style.width = "0%";
+            progressPercent.innerText = "0%";
         }
 
         function showStatus(type, message) {
@@ -333,6 +496,65 @@
             }
         }
 
+        // ฟังก์ชันจำลอง/คำนวณ Progress ของแถบดาวน์โหลดระหว่างประมวลผลคำสั่ง
+        function updateProgress(percent) {
+            progressContainer.style.display = "block";
+            progressFileName.innerText = `ไฟล์: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
+            progressBarFill.style.width = percent + "%";
+            progressPercent.innerText = percent + "%";
+        }
+
+        // ฟังก์ชันบันทึกและแสดงประวัติลงใน LocalStorage
+        function saveToHistory(filename, size, owner, repo) {
+            let history = JSON.parse(localStorage.getItem('upload_history')) || [];
+            const timeString = new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+            const dateString = new Date().toLocaleDateString('th-TH', {day: 'numeric', month: 'short'});
+            
+            const newItem = {
+                name: filename,
+                size: size,
+                time: `${dateString} | ${timeString}`,
+                url: `https://${owner}.github.io/${repo}/${filename}`
+            };
+            
+            history.unshift(newItem); // เอาอันล่าสุดขึ้นก่อน
+            localStorage.setItem('upload_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            let history = JSON.parse(localStorage.getItem('upload_history')) || [];
+            historyList.innerHTML = "";
+            
+            if(history.length === 0) {
+                historyList.innerHTML = `<div style="text-align:center; color:var(--text-sub); font-size:0.8rem; padding: 15px;">ไม่มีประวัติการอัปโหลด</div>`;
+                return;
+            }
+
+            history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "history-item";
+                div.innerHTML = `
+                    <div class="history-info">
+                        <span class="history-name" title="${item.name}">${item.name}</span>
+                        <span class="history-meta">${item.size} • ${item.time}</span>
+                    </div>
+                    <a href="${item.url}" target="_blank" class="history-link" title="เปิดดูลิงก์ Pages">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                `;
+                historyList.appendChild(div);
+            });
+        }
+
+        clearHistoryBtn.addEventListener('click', () => {
+            if(confirm('คุณต้องการลบประวัติการอัปโหลดทั้งหมดใช่หรือไม่?')) {
+                localStorage.removeItem('upload_history');
+                renderHistory();
+            }
+        });
+
+
         // ฟังก์ชันหลักในการอัปโหลดไฟล์ไปที่ GitHub REST API
         uploadBtn.addEventListener('click', async () => {
             const owner = document.getElementById('username').value.trim();
@@ -351,21 +573,20 @@
 
             showStatus('loading', 'กำลังแปลงโครงสร้างไฟล์เป็น Base64...');
             uploadBtn.disabled = true;
+            updateProgress(15);
 
-            // อ่านไฟล์และแปลงเป็นรูปแบบ Base64 ตามมาตรฐานข้อบังคับของ GitHub API
+            // อ่านไฟล์และแปลงเป็นรูปแบบ Base64
             const reader = new FileReader();
             reader.readAsDataURL(selectedFile);
             reader.onload = async () => {
                 const base64Content = reader.result.split(',')[1];
-                const path = selectedFile.name; // ตั้งชื่อไฟล์บน Repo ตามชื่อไฟล์ที่อัปโหลด
-
-                // ชี้เป้า URL ของไฟล์เป้าหมาย
+                const path = selectedFile.name;
                 const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
+                updateProgress(40);
                 showStatus('loading', 'กำลังตรวจสอบไฟล์เดิมบนเซิร์ฟเวอร์...');
                 
                 let sha = null;
-                // ตรวจสอบก่อนว่ามีไฟล์ชื่อซ้ำกันอยู่บน Repo ไหม (ถ้ามีต้องเอาค่า SHA เดิมมาเขียนทับ)
                 try {
                     const checkResponse = await fetch(url, {
                         method: 'GET',
@@ -373,18 +594,18 @@
                     });
                     if (checkResponse.ok) {
                         const checkData = await checkResponse.json();
-                        sha = checkData.sha; // ดึงค่าแฮชของไฟล์เก่ามาคอมมิตทับ
+                        sha = checkData.sha;
                     }
-                } catch (err) { /* ไม่เจอไฟล์เดิม ถือเป็นเรื่องปกติสำหรับการอัปโหลดครั้งแรก */ }
+                } catch (err) { /* ไม่เจอไฟล์เดิม */ }
 
+                updateProgress(70);
                 showStatus('loading', 'กำลังคอมมิตและอัปโหลดข้อมูลเข้าคลัง...');
 
-                // ยิงคำสั่ง PUT ไปที่เซิร์ฟเวอร์ GitHub เพื่อสั่งสร้างหรือบันทึกทับไฟล์
                 const bodyData = {
                     message: `อัปเดตไฟล์ระบบ: ${path} ผ่านแผงควบคุมหลัก`,
                     content: base64Content
                 };
-                if (sha) bodyData.sha = sha; // ใส่ค่า sha กรณีต้องการอัปเดตทับไฟล์เดิม
+                if (sha) bodyData.sha = sha;
 
                 try {
                     const response = await fetch(url, {
@@ -397,7 +618,13 @@
                     });
 
                     if (response.ok) {
+                        updateProgress(100);
                         showStatus('success', 'ส่งไฟล์ขึ้นคลังระบบสำเร็จ! พร้อมอัปเดตแบบเรียลไทม์');
+                        
+                        // บันทึกลงในประวัติการอัปโหลด
+                        const sizeText = (selectedFile.size / 1024).toFixed(2) + ' KB';
+                        saveToHistory(path, sizeText, owner, repo);
+
                         // รีเซ็ตการเลือกไฟล์หลังบันทึกสำเร็จ
                         selectedFile = null;
                         fileText.innerText = "เลือกไฟล์ หรือลากมาวางที่นี่";
