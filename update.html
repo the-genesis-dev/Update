@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>คลังอัปโหลดไฟล์ระบบ</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ios-bg: #000000;
+            --ios-card: rgba(28, 28, 30, 0.45);
+            --ios-blue: #0A84FF;
+            --ios-green: #30D158;
+            --ios-amber: #FF9F0A;
+            --ios-red: #FF453A;
+            --text-main: #FFFFFF;
+            --text-sub: #8E8E93;
+            --blur-val: 30px;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--ios-bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 10%, #1c1c1e 0%, #000000 70%);
+            padding: 20px;
+        }
+
+        /* ดีไซน์ Liquid Glass Card */
+        .glass-container {
+            background: var(--ios-card);
+            backdrop-filter: blur(var(--blur-val));
+            -webkit-backdrop-filter: blur(var(--blur-val));
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 440px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header i {
+            font-size: 3rem;
+            color: var(--ios-blue);
+            margin-bottom: 12px;
+            text-shadow: 0 0 15px rgba(10, 132, 255, 0.5);
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+            font-weight: 500;
+            padding-left: 4px;
+        }
+
+        /* Input สไตล์ iOS Glass */
+        .ios-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+
+        .ios-input:focus {
+            border-color: var(--ios-blue);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(10, 132, 255, 0.2);
+        }
+
+        /* โซนลากวางอัปโหลดไฟล์ */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--ios-blue);
+            background: rgba(10, 132, 255, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 2.2rem;
+            color: var(--text-sub);
+            margin-bottom: 10px;
+            transition: color 0.25s;
+        }
+
+        .upload-area:hover i {
+            color: var(--ios-blue);
+        }
+
+        .upload-area p {
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .upload-area span {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            display: block;
+            margin-top: 4px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* ปุ่มกด Action */
+        .ios-btn {
+            width: 100%;
+            background: var(--ios-blue);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+        }
+
+        .ios-btn:activate, .ios-btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .ios-btn:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-sub);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* บาร์แสดงสถานะการทำงาน */
+        .status-box {
+            margin-top: 18px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .status-box.loading {
+            display: flex;
+            background: rgba(10, 132, 255, 0.1);
+            border: 1px solid rgba(10, 132, 255, 0.2);
+            color: var(--ios-blue);
+        }
+
+        .status-box.success {
+            display: flex;
+            background: rgba(48, 209, 88, 0.1);
+            border: 1px solid rgba(48, 209, 88, 0.2);
+            color: var(--ios-green);
+        }
+
+        .status-box.error {
+            display: flex;
+            background: rgba(255, 69, 58, 0.1);
+            border: 1px solid rgba(255, 69, 58, 0.2);
+            color: var(--ios-red);
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        <div class="header">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <h1>คลังอัปโหลดไฟล์ระบบ</h1>
+            <p>ส่งข้อมูลไปยัง GitHub Pages โดยตรง</p>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fa-solid fa-user-gear"></i> GitHub Username</label>
+            <input type="text" id="username" class="ios-input" placeholder="เช่น the-genesis" value="the-genesis">
+        </div>
+
+        <div class="form-group">
+            <label><i class="fa-solid fa-code-branch"></i> Repository Name</label>
+            <input type="text" id="repo" class="ios-input" placeholder="ชื่อคลังเก็บโค้ดของคุณ">
+        </div>
+
+        <div class="form-group">
+            <label><i class="fa-solid fa-key"></i> GitHub Token (PAT)</label>
+            <input type="password" id="token" class="ios-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxx">
+        </div>
+
+        <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <i class="fa-solid fa-file-code" id="fileIcon"></i>
+            <p id="fileText">เลือกไฟล์ หรือลากมาวางที่นี่</p>
+            <span id="fileSize">รองรับไฟล์ข้อมูลทุกประเภท</span>
+            <input type="file" id="fileInput">
+        </div>
+
+        <button id="uploadBtn" class="ios-btn" disabled>
+            <i class="fa-solid fa-paper-plane"></i> เริ่มส่งไฟล์ขึ้นคลังระบบ
+        </button>
+
+        <div id="statusBox" class="status-box">
+            <i id="statusIcon" class="fa-solid"></i>
+            <span id="statusText">กำลังจัดเตรียมข้อความ...</span>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileText = document.getElementById('fileText');
+        const fileSize = document.getElementById('fileSize');
+        const fileIcon = document.getElementById('fileIcon');
+        const statusBox = document.getElementById('statusBox');
+        const statusText = document.getElementById('statusText');
+        const statusIcon = document.getElementById('statusIcon');
+
+        let selectedFile = null;
+
+        // บันทึก Token ชั่วคราวลงใน LocalStorage เพื่อไม่ต้องกรอกใหม่ทุกครั้ง (ปลอดภัยในเครื่องคุณเอง)
+        if(localStorage.getItem('gh_user')) document.getElementById('username').value = localStorage.getItem('gh_user');
+        if(localStorage.getItem('gh_repo')) document.getElementById('repo').value = localStorage.getItem('gh_repo');
+        if(localStorage.getItem('gh_token')) document.getElementById('token').value = localStorage.getItem('gh_token');
+
+        // เหตุการณ์ตรวจจับการลากวางไฟล์ (Drag & Drop)
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if(files.length > 0) handleFileSelection(files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if(e.target.files.length > 0) handleFileSelection(e.target.files[0]);
+        });
+
+        function handleFileSelection(file) {
+            selectedFile = file;
+            fileText.innerText = file.name;
+            fileSize.innerText = (file.size / 1024).toFixed(2) + ' KB';
+            fileIcon.className = "fa-solid fa-file-shield";
+            fileIcon.style.color = "var(--ios-green)";
+            uploadBtn.disabled = false;
+            showStatus(null);
+        }
+
+        function showStatus(type, message) {
+            statusBox.className = "status-box";
+            if (!type) { statusBox.style.display = "none"; return; }
+            
+            statusBox.style.display = "flex";
+            statusBox.classList.add(type);
+            statusText.innerText = message;
+            
+            if (type === 'loading') {
+                statusIcon.className = "fa-solid fa-spinner spinner";
+            } else if (type === 'success') {
+                statusIcon.className = "fa-solid fa-circle-check";
+            } else if (type === 'error') {
+                statusIcon.className = "fa-solid fa-circle-exclamation";
+            }
+        }
+
+        // ฟังก์ชันหลักในการอัปโหลดไฟล์ไปที่ GitHub REST API
+        uploadBtn.addEventListener('click', async () => {
+            const owner = document.getElementById('username').value.trim();
+            const repo = document.getElementById('repo').value.trim();
+            const token = document.getElementById('token').value.trim();
+
+            if (!owner || !repo || !token || !selectedFile) {
+                showStatus('error', 'กรุณากรอกข้อมูลระบบควบคุมให้ครบถ้วน');
+                return;
+            }
+
+            // บันทึกค่าเก็บไว้ใช้ครั้งถัดไป
+            localStorage.setItem('gh_user', owner);
+            localStorage.setItem('gh_repo', repo);
+            localStorage.setItem('gh_token', token);
+
+            showStatus('loading', 'กำลังแปลงโครงสร้างไฟล์เป็น Base64...');
+            uploadBtn.disabled = true;
+
+            // อ่านไฟล์และแปลงเป็นรูปแบบ Base64 ตามมาตรฐานข้อบังคับของ GitHub API
+            const reader = new FileReader();
+            reader.readAsDataURL(selectedFile);
+            reader.onload = async () => {
+                const base64Content = reader.result.split(',')[1];
+                const path = selectedFile.name; // ตั้งชื่อไฟล์บน Repo ตามชื่อไฟล์ที่อัปโหลด
+
+                // ชี้เป้า URL ของไฟล์เป้าหมาย
+                const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+                showStatus('loading', 'กำลังตรวจสอบไฟล์เดิมบนเซิร์ฟเวอร์...');
+                
+                let sha = null;
+                // ตรวจสอบก่อนว่ามีไฟล์ชื่อซ้ำกันอยู่บน Repo ไหม (ถ้ามีต้องเอาค่า SHA เดิมมาเขียนทับ)
+                try {
+                    const checkResponse = await fetch(url, {
+                        method: 'GET',
+                        headers: { 'Authorization': `token ${token}` }
+                    });
+                    if (checkResponse.ok) {
+                        const checkData = await checkResponse.json();
+                        sha = checkData.sha; // ดึงค่าแฮชของไฟล์เก่ามาคอมมิตทับ
+                    }
+                } catch (err) { /* ไม่เจอไฟล์เดิม ถือเป็นเรื่องปกติสำหรับการอัปโหลดครั้งแรก */ }
+
+                showStatus('loading', 'กำลังคอมมิตและอัปโหลดข้อมูลเข้าคลัง...');
+
+                // ยิงคำสั่ง PUT ไปที่เซิร์ฟเวอร์ GitHub เพื่อสั่งสร้างหรือบันทึกทับไฟล์
+                const bodyData = {
+                    message: `อัปเดตไฟล์ระบบ: ${path} ผ่านแผงควบคุมหลัก`,
+                    content: base64Content
+                };
+                if (sha) bodyData.sha = sha; // ใส่ค่า sha กรณีต้องการอัปเดตทับไฟล์เดิม
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(bodyData)
+                    });
+
+                    if (response.ok) {
+                        showStatus('success', 'ส่งไฟล์ขึ้นคลังระบบสำเร็จ! พร้อมอัปเดตแบบเรียลไทม์');
+                        // รีเซ็ตการเลือกไฟล์หลังบันทึกสำเร็จ
+                        selectedFile = null;
+                        fileText.innerText = "เลือกไฟล์ หรือลากมาวางที่นี่";
+                        fileSize.innerText = "รองรับไฟล์ข้อมูลทุกประเภท";
+                        fileIcon.className = "fa-solid fa-file-code";
+                        fileIcon.style.color = "var(--text-sub)";
+                    } else {
+                        const errData = await response.json();
+                        showStatus('error', `ปฏิเสธการอัปโหลด: ${errData.message}`);
+                        uploadBtn.disabled = false;
+                    }
+                } catch (error) {
+                    showStatus('error', 'เครือข่ายขัดข้อง ไม่สามารถติดต่อ GitHub API ได้');
+                    uploadBtn.disabled = false;
+                }
+            };
+        });
+    </script>
+</body>
+</html>
