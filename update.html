@@ -606,19 +606,17 @@
             progressPercent.innerText = "0%";
         }
 
-        // ฟังก์ชันเจนชื่อไฟล์แบบ YYMMDDHHmm ตามเวลาปัจจุบัน
-        function generateTimestampName(originalName) {
-            const now = new Date();
-            const yy = String(now.getFullYear()).slice(-2);
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            const hh = String(now.getHours()).padStart(2, '0');
-            const min = String(now.getMinutes()).padStart(2, '0');
-            
-            // ดึงเอาเฉพาะนามสกุลไฟล์เดิม (.ipa, .zip ฯลฯ)
-            const extension = originalName.substring(originalName.lastIndexOf('.'));
-            
-            return `${yy}${mm}${dd}${hh}${min}${extension}`;
+        // ฟังก์ชันเจนชื่อไฟล์แบบ YYMMDD ตามวันที่ปัจจุบัน
+function generateTimestampName(originalName) {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2); // ได้ "26"
+    const mm = String(now.getMonth() + 1).padStart(2, '0'); // ได้ "06"
+    const dd = String(now.getDate()).padStart(2, '0'); // ได้ "11"
+    
+    // ดึงเฉพาะนามสกุลไฟล์เดิม เช่น .ipa
+    const extension = originalName.substring(originalName.lastIndexOf('.'));
+    
+    return `${yy}${mm}${dd}${extension}`; // ผลลัพธ์: 260611.ipa
         }
 
         function showStatus(type, message) {
