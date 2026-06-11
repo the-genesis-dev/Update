@@ -418,7 +418,7 @@
     </div>
 
     <script>
-        const fileInput = document.getElementById('fileInput');
+                const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const uploadBtn = document.getElementById('uploadBtn');
         const fileText = document.getElementById('fileText');
@@ -428,7 +428,6 @@
         const statusText = document.getElementById('statusText');
         const statusIcon = document.getElementById('statusIcon');
         
-        // ตัวแปรส่วนที่เพิ่มขึ้นมาใหม่
         const progressContainer = document.getElementById('progressContainer');
         const progressBarFill = document.getElementById('progressBarFill');
         const progressPercent = document.getElementById('progressPercent');
@@ -438,15 +437,12 @@
 
         let selectedFile = null;
 
-        // โหลดข้อมูลเดิมจาก LocalStorage
         if(localStorage.getItem('gh_user')) document.getElementById('username').value = localStorage.getItem('gh_user');
         if(localStorage.getItem('gh_repo')) document.getElementById('repo').value = localStorage.getItem('gh_repo');
         if(localStorage.getItem('gh_token')) document.getElementById('token').value = localStorage.getItem('gh_token');
 
-        // เรียกแสดงประวัติเมื่อเปิดหน้าเว็บ
         renderHistory();
 
-        // เหตุการณ์ตรวจจับการลากวางไฟล์ (Drag & Drop)
         ['dragenter', 'dragover'].forEach(eventName => {
             dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false);
         });
@@ -473,7 +469,6 @@
             uploadBtn.disabled = false;
             showStatus(null);
             
-            // ซ่อนแถบ progress เดิมตอนเลือกไฟล์ใหม่
             progressContainer.style.display = "none";
             progressBarFill.style.width = "0%";
             progressPercent.innerText = "0%";
@@ -496,7 +491,6 @@
             }
         }
 
-        // ฟังก์ชันจำลอง/คำนวณ Progress ของแถบดาวน์โหลดระหว่างประมวลผลคำสั่ง
         function updateProgress(percent) {
             progressContainer.style.display = "block";
             progressFileName.innerText = `ไฟล์: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
@@ -504,7 +498,6 @@
             progressPercent.innerText = percent + "%";
         }
 
-        // ฟังก์ชันบันทึกและแสดงประวัติลงใน LocalStorage
         function saveToHistory(filename, size, owner, repo) {
             let history = JSON.parse(localStorage.getItem('upload_history')) || [];
             const timeString = new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
@@ -517,7 +510,7 @@
                 url: `https://${owner}.github.io/${repo}/${filename}`
             };
             
-            history.unshift(newItem); // เอาอันล่าสุดขึ้นก่อน
+            history.unshift(newItem);
             localStorage.setItem('upload_history', JSON.stringify(history));
             renderHistory();
         }
@@ -554,8 +547,7 @@
             }
         });
 
-
-        // ฟังก์ชันหลักในการอัปโหลดไฟล์ไปที่ GitHub REST API
+        // ฟังก์ชันหลักที่ปรับปรุงระบบ ลบก่อนอัปโหลดซ้ำ
         uploadBtn.addEventListener('click', async () => {
             const owner = document.getElementById('username').value.trim();
             const repo = document.getElementById('repo').value.trim();
@@ -566,16 +558,14 @@
                 return;
             }
 
-            // บันทึกค่าเก็บไว้ใช้ครั้งถัดไป
             localStorage.setItem('gh_user', owner);
             localStorage.setItem('gh_repo', repo);
             localStorage.setItem('gh_token', token);
 
             showStatus('loading', 'กำลังแปลงโครงสร้างไฟล์เป็น Base64...');
             uploadBtn.disabled = true;
-            updateProgress(15);
+            updateProgress(10);
 
-            // อ่านไฟล์และแปลงเป็นรูปแบบ Base64
             const reader = new FileReader();
             reader.readAsDataURL(selectedFile);
             reader.onload = async () => {
@@ -583,7 +573,7 @@
                 const path = selectedFile.name;
                 const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
-                updateProgress(40);
+                updateProgress(30);
                 showStatus('loading', 'กำลังตรวจสอบไฟล์เดิมบนเซิร์ฟเวอร์...');
                 
                 let sha = null;
@@ -596,16 +586,49 @@
                         const checkData = await checkResponse.json();
                         sha = checkData.sha;
                     }
-                } catch (err) { /* ไม่เจอไฟล์เดิม */ }
+                } catch (err) { /* ไม่เจอไฟล์เดิม ข้ามไปได้เลย */ }
+
+                // ตรวจสอบว่ามีไฟล์เดิมไหม ถ้ามีให้ทำการ "ลบ" ก่อน
+                if (sha) {
+                    updateProgress(50);
+                    showStatus('loading', 'พบไฟล์ซ้ำ! กำลังดำเนินการลบไฟล์เดิมออก...');
+                    
+                    try {
+                        const deleteResponse = await fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `token ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                message: `ลบไฟล์เดิมเพื่อเตรียมอัปโหลดใหม่: ${path}`,
+                                sha: sha
+                            })
+                        });
+
+                        if (!deleteResponse.ok) {
+                            const deleteErr = await deleteResponse.json();
+                            showStatus('error', `ไม่สามารถลบไฟล์เดิมได้: ${deleteErr.message}`);
+                            uploadBtn.disabled = false;
+                            return;
+                        }
+                        // ลบสำเร็จ ให้เซ็ตค่า sha เป็น null เพื่ออัปโหลดเสมือนเป็นไฟล์ใหม่
+                        sha = null; 
+                    } catch (error) {
+                        showStatus('error', 'เครือข่ายขัดข้อง ไม่สามารถลบไฟล์เดิมได้');
+                        uploadBtn.disabled = false;
+                        return;
+                    }
+                }
 
                 updateProgress(70);
-                showStatus('loading', 'กำลังคอมมิตและอัปโหลดข้อมูลเข้าคลัง...');
+                showStatus('loading', 'กำลังส่งไฟล์ชุดใหม่เข้าคลังระบบ...');
 
+                // ส่งคำสั่งสร้างไฟล์ใหม่แบบคลีนๆ
                 const bodyData = {
-                    message: `อัปเดตไฟล์ระบบ: ${path} ผ่านแผงควบคุมหลัก`,
+                    message: `อัปโหลดไฟล์ใหม่ (ทดแทนของเดิม): ${path}`,
                     content: base64Content
                 };
-                if (sha) bodyData.sha = sha;
 
                 try {
                     const response = await fetch(url, {
@@ -619,13 +642,11 @@
 
                     if (response.ok) {
                         updateProgress(100);
-                        showStatus('success', 'ส่งไฟล์ขึ้นคลังระบบสำเร็จ! พร้อมอัปเดตแบบเรียลไทม์');
+                        showStatus('success', 'ลบไฟล์เก่าและอัปโหลดไฟล์ใหม่สำเร็จ!');
                         
-                        // บันทึกลงในประวัติการอัปโหลด
                         const sizeText = (selectedFile.size / 1024).toFixed(2) + ' KB';
                         saveToHistory(path, sizeText, owner, repo);
 
-                        // รีเซ็ตการเลือกไฟล์หลังบันทึกสำเร็จ
                         selectedFile = null;
                         fileText.innerText = "เลือกไฟล์ หรือลากมาวางที่นี่";
                         fileSize.innerText = "รองรับไฟล์ข้อมูลทุกประเภท";
@@ -633,7 +654,7 @@
                         fileIcon.style.color = "var(--text-sub)";
                     } else {
                         const errData = await response.json();
-                        showStatus('error', `ปฏิเสธการอัปโหลด: ${errData.message}`);
+                        showStatus('error', `ปฏิเสธการอัปโหลดไฟล์ใหม่: ${errData.message}`);
                         uploadBtn.disabled = false;
                     }
                 } catch (error) {
