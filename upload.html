@@ -367,78 +367,6 @@
             color: var(--ios-red);
         }
 
-        /* ส่วนของประวัติการอัปโหลด */
-        .history-section {
-            margin-top: 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 20px;
-        }
-        .history-title {
-            font-size: 0.85rem;
-            color: var(--text-sub);
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .clear-history-btn {
-            background: none;
-            border: none;
-            color: var(--ios-red);
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-        .history-list {
-            max-height: 180px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding-right: 4px;
-        }
-        
-        .history-list::-webkit-scrollbar {
-            width: 4px;
-        }
-        .history-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 4px;
-        }
-        .history-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-        .history-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            max-width: 80%;
-        }
-        .history-name {
-            font-size: 0.85rem;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .history-meta {
-            font-size: 0.7rem;
-            color: var(--text-sub);
-        }
-        .history-link {
-            color: var(--ios-blue);
-            font-size: 1rem;
-            text-decoration: none;
-            padding: 4px;
-        }
-
         .spinner {
             animation: spin 1s linear infinite;
         }
@@ -465,7 +393,7 @@
         <ul class="sidebar-menu">
             <li class="sidebar-item">
                 <a href="index.html">
-                    <i class="fa-solid fa-house"></i> หน้าหลัก (Index)
+                    <i class="fa-solid fa-house"></i> หน้าหลัก
                 </a>
             </li>
             <li class="sidebar-item active">
@@ -523,14 +451,6 @@
             <i id="statusIcon" class="fa-solid"></i>
             <span id="statusText">กำลังจัดเตรียมข้อความ...</span>
         </div>
-
-        <div class="history-section">
-            <div class="history-title">
-                <span><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการอัปโหลด</span>
-                <button class="clear-history-btn" id="clearHistoryBtn">ล้างประวัติ</button>
-            </div>
-            <div class="history-list" id="historyList"></div>
-        </div>
     </div>
 
     <script>
@@ -564,16 +484,12 @@
         const progressBarFill = document.getElementById('progressBarFill');
         const progressPercent = document.getElementById('progressPercent');
         const progressFileName = document.getElementById('progressFileName');
-        const historyList = document.getElementById('historyList');
-        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
         let selectedFile = null;
 
         if(localStorage.getItem('gh_user')) document.getElementById('username').value = localStorage.getItem('gh_user');
         if(localStorage.getItem('gh_repo')) document.getElementById('repo').value = localStorage.getItem('gh_repo');
         if(localStorage.getItem('gh_token')) document.getElementById('token').value = localStorage.getItem('gh_token');
-
-        renderHistory();
 
         ['dragenter', 'dragover'].forEach(eventName => {
             dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false);
@@ -607,16 +523,13 @@
         }
 
         // ฟังก์ชันเจนชื่อไฟล์แบบ YYMMDD ตามวันที่ปัจจุบัน
-function generateTimestampName(originalName) {
-    const now = new Date();
-    const yy = String(now.getFullYear()).slice(-2); // ได้ "26"
-    const mm = String(now.getMonth() + 1).padStart(2, '0'); // ได้ "06"
-    const dd = String(now.getDate()).padStart(2, '0'); // ได้ "11"
-    
-    // ดึงเฉพาะนามสกุลไฟล์เดิม เช่น .ipa
-    const extension = originalName.substring(originalName.lastIndexOf('.'));
-    
-    return `${yy}${mm}${dd}${extension}`; // ผลลัพธ์: 260611.ipa
+        function generateTimestampName(originalName) {
+            const now = new Date();
+            const yy = String(now.getFullYear()).slice(-2);
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const extension = originalName.substring(originalName.lastIndexOf('.'));
+            return `${yy}${mm}${dd}${extension}`;
         }
 
         function showStatus(type, message) {
@@ -638,61 +551,12 @@ function generateTimestampName(originalName) {
 
         function updateProgress(percent, targetName) {
             progressContainer.style.display = "block";
-            progressFileName.innerText = `จัดเตรียม: ${targetName} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
+            progressFileName.innerText = `จัดเตรียม: ${targetName}`;
             progressBarFill.style.width = percent + "%";
             progressPercent.innerText = percent + "%";
         }
 
-        function saveToHistory(filename, size, owner, repo) {
-            let history = JSON.parse(localStorage.getItem('upload_history')) || [];
-            const timeString = new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
-            const dateString = new Date().toLocaleDateString('th-TH', {day: 'numeric', month: 'short'});
-            
-            const newItem = {
-                name: filename,
-                size: size,
-                time: `${dateString} | ${timeString}`,
-                url: `https://${owner}.github.io/${repo}/${filename}`
-            };
-            
-            history.unshift(newItem);
-            localStorage.setItem('upload_history', JSON.stringify(history));
-            renderHistory();
-        }
-
-        function renderHistory() {
-            let history = JSON.parse(localStorage.getItem('upload_history')) || [];
-            historyList.innerHTML = "";
-            
-            if(history.length === 0) {
-                historyList.innerHTML = `<div style="text-align:center; color:var(--text-sub); font-size:0.8rem; padding: 15px;">ไม่มีประวัติการอัปโหลด</div>`;
-                return;
-            }
-
-            history.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "history-item";
-                div.innerHTML = `
-                    <div class="history-info">
-                        <span class="history-name" title="${item.name}">${item.name}</span>
-                        <span class="history-meta">${item.size} • ${item.time}</span>
-                    </div>
-                    <a href="${item.url}" target="_blank" class="history-link" title="เปิดดูลิงก์ Pages">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                    </a>
-                `;
-                historyList.appendChild(div);
-            });
-        }
-
-        clearHistoryBtn.addEventListener('click', () => {
-            if(confirm('คุณต้องการลบประวัติการอัปโหลดทั้งหมดใช่หรือไม่?')) {
-                localStorage.removeItem('upload_history');
-                renderHistory();
-            }
-        });
-
-        // ฟังก์ชันหลักสำหรับการลบไฟล์เดิม (ถ้ามี) และอัปโหลดไฟล์ที่มีการเปลี่ยนชื่อใหม่
+        // ฟังก์ชันหลักสำหรับการกวาดล้างไฟล์ .ipa เก่าทั้งหมด และอัปโหลดไฟล์ใหม่
         uploadBtn.addEventListener('click', async () => {
             const owner = document.getElementById('username').value.trim();
             const repo = document.getElementById('repo').value.trim();
@@ -707,7 +571,6 @@ function generateTimestampName(originalName) {
             localStorage.setItem('gh_repo', repo);
             localStorage.setItem('gh_token', token);
 
-            // เจนชื่อไฟล์ใหม่ตามเวลาปัจจุบัน
             const newFileName = generateTimestampName(selectedFile.name);
 
             showStatus('loading', 'กำลังแปลงโครงสร้างไฟล์เป็น Base64...');
@@ -718,67 +581,73 @@ function generateTimestampName(originalName) {
             reader.readAsDataURL(selectedFile);
             reader.onload = async () => {
                 const base64Content = reader.result.split(',')[1];
-                const path = newFileName; // ใช้ชื่อใหม่ที่ตั้งตามวันเวลาในการอัปโหลด
-                const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-
-                updateProgress(30, newFileName);
-                showStatus('loading', 'กำลังตรวจสอบไฟล์เดิมบนเซิร์ฟเวอร์...');
                 
-                let sha = null;
+                updateProgress(30, newFileName);
+                showStatus('loading', 'กำลังสแกนหาไฟล์ .ipa เก่าในคลังเก็บข้อมูลทั้งหมด...');
+
+                // 1. เรียกดูรายการไฟล์ทั้งหมดที่ Root ของ Repo เพื่อหาไฟล์ .ipa เก่าทั้งหมดที่มีอยู่
+                const contentsUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;
+                let filesToDelete = [];
+
                 try {
-                    const checkResponse = await fetch(url, {
+                    const contentsResponse = await fetch(contentsUrl, {
                         method: 'GET',
                         headers: { 'Authorization': `token ${token}` }
                     });
-                    if (checkResponse.ok) {
-                        const checkData = await checkResponse.json();
-                        sha = checkData.sha;
-                    }
-                } catch (err) { /* ไม่เจอไฟล์เก่า ข้ามไปได้เลย */ }
 
-                // หากตรงกับจังหวะวิเดียวกันที่มีไฟล์ชื่อนี้อยู่แล้ว ให้ทำการลบก่อน
-                if (sha) {
-                    updateProgress(50, newFileName);
-                    showStatus('loading', 'พบไฟล์ชื่อซ้ำ! กำลังลบไฟล์เดิมออก...');
-                    
-                    try {
-                        const deleteResponse = await fetch(url, {
-                            method: 'DELETE',
-                            headers: {
-                                'Authorization': `token ${token}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                message: `ลบไฟล์เดิมเพื่อเตรียมอัปโหลดใหม่: ${path}`,
-                                sha: sha
-                            })
-                        });
-
-                        if (!deleteResponse.ok) {
-                            const deleteErr = await deleteResponse.json();
-                            showStatus('error', `ไม่สามารถลบไฟล์เดิมได้: ${deleteErr.message}`);
-                            uploadBtn.disabled = false;
-                            return;
+                    if (contentsResponse.ok) {
+                        const filesData = await contentsResponse.json();
+                        if (Array.isArray(filesData)) {
+                            // ค้นหาทุกไฟล์ที่ลงท้ายด้วยนามสกุล .ipa
+                            filesToDelete = filesData.filter(file => file.name.toLowerCase().endsWith('.ipa'));
                         }
-                        sha = null; 
-                    } catch (error) {
-                        showStatus('error', 'เครือข่ายขัดข้อง ไม่สามารถลบไฟล์เดิมได้');
-                        uploadBtn.disabled = false;
-                        return;
+                    }
+                } catch (err) {
+                    console.error("ไม่สามารถตรวจสอบไฟล์เดิมได้:", err);
+                }
+
+                // 2. ลูปคำสั่งทำลายไฟล์ .ipa เก่าทั้งหมดที่ตรวจเจอให้เกลี้ยง Repo
+                if (filesToDelete.length > 0) {
+                    showStatus('loading', `พบไฟล์เก่า ${filesToDelete.length} ไฟล์ กำลังทำความสะอาดคลังระบบ...`);
+                    
+                    for (let i = 0; i < filesToDelete.length; i++) {
+                        const fileInfo = filesToDelete[i];
+                        const deleteUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${fileInfo.path}`;
+                        
+                        try {
+                            const deleteResponse = await fetch(deleteUrl, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Authorization': `token ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    message: `เคลียร์ไฟล์เก่าออกจากระบบอัตโนมัติ: ${fileInfo.name}`,
+                                    sha: fileInfo.sha
+                                })
+                            });
+                            
+                            if (!deleteResponse.ok) {
+                                console.warn(`ลบไฟล์ไม่สำเร็จ: ${fileInfo.name}`);
+                            }
+                        } catch (error) {
+                            console.error(`เกิดข้อผิดพลาดระหว่างลบไฟล์: ${fileInfo.name}`, error);
+                        }
                     }
                 }
 
                 updateProgress(70, newFileName);
                 showStatus('loading', 'กำลังส่งไฟล์เข้าคลังระบบด้วยชื่อใหม่...');
 
-                // ส่งคำสั่งสร้างไฟล์ใหม่แบบคลีนๆ เข้าคลัง GitHub
+                // 3. ส่งคำสั่งสร้างไฟล์ใหม่แบบคลีน ๆ เข้าคลัง GitHub
+                const targetUploadUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${newFileName}`;
                 const bodyData = {
-                    message: `อัปโหลดไฟล์ระบบเสร็จสิ้น (Auto-Rename): ${path}`,
+                    message: `อัปโหลดไฟล์ระบบเสร็จสิ้น (คลังเหลือไฟล์เดียว): ${newFileName}`,
                     content: base64Content
                 };
 
                 try {
-                    const response = await fetch(url, {
+                    const response = await fetch(targetUploadUrl, {
                         method: 'PUT',
                         headers: {
                             'Authorization': `token ${token}`,
@@ -789,11 +658,8 @@ function generateTimestampName(originalName) {
 
                     if (response.ok) {
                         updateProgress(100, newFileName);
-                        showStatus('success', 'เปลี่ยนชื่อและอัปโหลดไฟล์ใหม่สำเร็จ!');
+                        showStatus('success', 'ล้างคลังเก่าและอัปโหลดไฟล์ใหม่สำเร็จ!');
                         
-                        const sizeText = (selectedFile.size / 1024).toFixed(2) + ' KB';
-                        saveToHistory(path, sizeText, owner, repo);
-
                         selectedFile = null;
                         fileText.innerText = "เลือกไฟล์ หรือลากมาวางที่นี่";
                         fileSize.innerText = "รองรับไฟล์ข้อมูลทุกประเภท";
