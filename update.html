@@ -10,6 +10,7 @@
         :root {
             --ios-bg: #000000;
             --ios-card: rgba(28, 28, 30, 0.45);
+            --ios-sidebar: rgba(20, 20, 22, 0.65);
             --ios-blue: #0A84FF;
             --ios-green: #30D158;
             --ios-amber: #FF9F0A;
@@ -37,6 +38,122 @@
             min-height: 100vh;
             background-image: radial-gradient(circle at 50% 10%, #1c1c1e 0%, #000000 70%);
             padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        /* ปุ่มเปิด Sidebar */
+        .sidebar-toggle {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            background: var(--ios-card);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            color: var(--ios-blue);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.2s ease;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-toggle:active {
+            transform: scale(0.92);
+            opacity: 0.8;
+        }
+
+        /* Sidebar สไตล์ iOS Liquid Glass */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: var(--ios-sidebar);
+            backdrop-filter: blur(var(--blur-val));
+            -webkit-backdrop-filter: blur(var(--blur-val));
+            border-right: 1px solid var(--border-color);
+            z-index: 999;
+            transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+            padding: 90px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .sidebar.active {
+            transform: translateX(280px);
+        }
+
+        /* Overlay ฉากหลังเวลาเปิด Sidebar */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 998;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .sidebar-brand {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            padding-left: 10px;
+            border-left: 3px solid var(--ios-blue);
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .sidebar-item a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-item a:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-item.active a {
+            background: rgba(10, 132, 255, 0.15);
+            color: var(--ios-blue);
+        }
+
+        .sidebar-item a i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.05rem;
         }
 
         /* ดีไซน์ Liquid Glass Card */
@@ -51,31 +168,13 @@
             padding: 30px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
             position: relative;
-        }
-
-        /* ปุ่มย้อนกลับสไตล์ iOS */
-        .back-btn {
-            position: absolute;
-            top: 25px;
-            left: 25px;
-            color: var(--ios-blue);
-            text-decoration: none;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: opacity 0.2s;
-            font-weight: 500;
-        }
-
-        .back-btn:active {
-            opacity: 0.6;
+            margin-top: 20px;
         }
 
         .header {
             text-align: center;
             margin-bottom: 25px;
-            margin-top: 15px;
+            margin-top: 5px;
         }
 
         .header i {
@@ -223,7 +322,7 @@
             box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
         }
 
-        .ios-btn:activate, .ios-btn:active {
+        .ios-btn:active {
             transform: scale(0.98);
             opacity: 0.9;
         }
@@ -298,7 +397,7 @@
             gap: 8px;
             padding-right: 4px;
         }
-        /* ปรับแต่ง Scrollbar สไตล์ iOS */
+        
         .history-list::-webkit-scrollbar {
             width: 4px;
         }
@@ -355,11 +454,29 @@
 </head>
 <body>
 
-    <div class="glass-container">
-        <a href="index.html" class="back-btn">
-            <i class="fa-solid fa-chevron-left"></i> ย้อนกลับ
-        </a>
+    <button class="sidebar-toggle" id="sidebarToggle" title="เปิดเมนู">
+        <i class="fa-solid fa-bars"></i>
+    </button>
 
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">แผงควบคุมระบบ</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="index.html">
+                    <i class="fa-solid fa-house"></i> หน้าหลัก (Index)
+                </a>
+            </li>
+            <li class="sidebar-item active">
+                <a href="#">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> คลังอัปโหลดไฟล์
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="glass-container">
         <div class="header">
             <i class="fa-solid fa-cloud-arrow-up"></i>
             <h1>คลังอัปโหลดไฟล์ระบบ</h1>
@@ -412,13 +529,28 @@
                 <span><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการอัปโหลด</span>
                 <button class="clear-history-btn" id="clearHistoryBtn">ล้างประวัติ</button>
             </div>
-            <div class="history-list" id="historyList">
-                </div>
+            <div class="history-list" id="historyList"></div>
         </div>
     </div>
 
     <script>
-                const fileInput = document.getElementById('fileInput');
+        // เอนทิตีและการควบคุม Sidebar
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            const isOpen = sidebar.classList.contains('active');
+            sidebarToggle.innerHTML = isOpen ? `<i class="fa-solid fa-xmark"></i>` : `<i class="fa-solid fa-bars"></i>`;
+        }
+
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // ตัวแปรการอัปโหลดหลัก
+        const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const uploadBtn = document.getElementById('uploadBtn');
         const fileText = document.getElementById('fileText');
@@ -474,6 +606,21 @@
             progressPercent.innerText = "0%";
         }
 
+        // ฟังก์ชันเจนชื่อไฟล์แบบ YYMMDDHHmm ตามเวลาปัจจุบัน
+        function generateTimestampName(originalName) {
+            const now = new Date();
+            const yy = String(now.getFullYear()).slice(-2);
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            
+            // ดึงเอาเฉพาะนามสกุลไฟล์เดิม (.ipa, .zip ฯลฯ)
+            const extension = originalName.substring(originalName.lastIndexOf('.'));
+            
+            return `${yy}${mm}${dd}${hh}${min}${extension}`;
+        }
+
         function showStatus(type, message) {
             statusBox.className = "status-box";
             if (!type) { statusBox.style.display = "none"; return; }
@@ -491,9 +638,9 @@
             }
         }
 
-        function updateProgress(percent) {
+        function updateProgress(percent, targetName) {
             progressContainer.style.display = "block";
-            progressFileName.innerText = `ไฟล์: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
+            progressFileName.innerText = `จัดเตรียม: ${targetName} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
             progressBarFill.style.width = percent + "%";
             progressPercent.innerText = percent + "%";
         }
@@ -547,7 +694,7 @@
             }
         });
 
-        // ฟังก์ชันหลักที่ปรับปรุงระบบ ลบก่อนอัปโหลดซ้ำ
+        // ฟังก์ชันหลักสำหรับการลบไฟล์เดิม (ถ้ามี) และอัปโหลดไฟล์ที่มีการเปลี่ยนชื่อใหม่
         uploadBtn.addEventListener('click', async () => {
             const owner = document.getElementById('username').value.trim();
             const repo = document.getElementById('repo').value.trim();
@@ -562,18 +709,21 @@
             localStorage.setItem('gh_repo', repo);
             localStorage.setItem('gh_token', token);
 
+            // เจนชื่อไฟล์ใหม่ตามเวลาปัจจุบัน
+            const newFileName = generateTimestampName(selectedFile.name);
+
             showStatus('loading', 'กำลังแปลงโครงสร้างไฟล์เป็น Base64...');
             uploadBtn.disabled = true;
-            updateProgress(10);
+            updateProgress(10, newFileName);
 
             const reader = new FileReader();
             reader.readAsDataURL(selectedFile);
             reader.onload = async () => {
                 const base64Content = reader.result.split(',')[1];
-                const path = selectedFile.name;
+                const path = newFileName; // ใช้ชื่อใหม่ที่ตั้งตามวันเวลาในการอัปโหลด
                 const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
-                updateProgress(30);
+                updateProgress(30, newFileName);
                 showStatus('loading', 'กำลังตรวจสอบไฟล์เดิมบนเซิร์ฟเวอร์...');
                 
                 let sha = null;
@@ -586,12 +736,12 @@
                         const checkData = await checkResponse.json();
                         sha = checkData.sha;
                     }
-                } catch (err) { /* ไม่เจอไฟล์เดิม ข้ามไปได้เลย */ }
+                } catch (err) { /* ไม่เจอไฟล์เก่า ข้ามไปได้เลย */ }
 
-                // ตรวจสอบว่ามีไฟล์เดิมไหม ถ้ามีให้ทำการ "ลบ" ก่อน
+                // หากตรงกับจังหวะวิเดียวกันที่มีไฟล์ชื่อนี้อยู่แล้ว ให้ทำการลบก่อน
                 if (sha) {
-                    updateProgress(50);
-                    showStatus('loading', 'พบไฟล์ซ้ำ! กำลังดำเนินการลบไฟล์เดิมออก...');
+                    updateProgress(50, newFileName);
+                    showStatus('loading', 'พบไฟล์ชื่อซ้ำ! กำลังลบไฟล์เดิมออก...');
                     
                     try {
                         const deleteResponse = await fetch(url, {
@@ -612,7 +762,6 @@
                             uploadBtn.disabled = false;
                             return;
                         }
-                        // ลบสำเร็จ ให้เซ็ตค่า sha เป็น null เพื่ออัปโหลดเสมือนเป็นไฟล์ใหม่
                         sha = null; 
                     } catch (error) {
                         showStatus('error', 'เครือข่ายขัดข้อง ไม่สามารถลบไฟล์เดิมได้');
@@ -621,12 +770,12 @@
                     }
                 }
 
-                updateProgress(70);
-                showStatus('loading', 'กำลังส่งไฟล์ชุดใหม่เข้าคลังระบบ...');
+                updateProgress(70, newFileName);
+                showStatus('loading', 'กำลังส่งไฟล์เข้าคลังระบบด้วยชื่อใหม่...');
 
-                // ส่งคำสั่งสร้างไฟล์ใหม่แบบคลีนๆ
+                // ส่งคำสั่งสร้างไฟล์ใหม่แบบคลีนๆ เข้าคลัง GitHub
                 const bodyData = {
-                    message: `อัปโหลดไฟล์ใหม่ (ทดแทนของเดิม): ${path}`,
+                    message: `อัปโหลดไฟล์ระบบเสร็จสิ้น (Auto-Rename): ${path}`,
                     content: base64Content
                 };
 
@@ -641,8 +790,8 @@
                     });
 
                     if (response.ok) {
-                        updateProgress(100);
-                        showStatus('success', 'ลบไฟล์เก่าและอัปโหลดไฟล์ใหม่สำเร็จ!');
+                        updateProgress(100, newFileName);
+                        showStatus('success', 'เปลี่ยนชื่อและอัปโหลดไฟล์ใหม่สำเร็จ!');
                         
                         const sizeText = (selectedFile.size / 1024).toFixed(2) + ' KB';
                         saveToHistory(path, sizeText, owner, repo);
@@ -654,7 +803,7 @@
                         fileIcon.style.color = "var(--text-sub)";
                     } else {
                         const errData = await response.json();
-                        showStatus('error', `ปฏิเสธการอัปโหลดไฟล์ใหม่: ${errData.message}`);
+                        showStatus('error', `ปฏิเสธการอัปโหลด: ${errData.message}`);
                         uploadBtn.disabled = false;
                     }
                 } catch (error) {
